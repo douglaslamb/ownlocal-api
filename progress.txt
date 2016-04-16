@@ -1,0 +1,3 @@
+ok so i'm gonna
+1. ingest the data start out without a database. I'm still ingesting because I gotta get the csv in.
+2. write the request code making sure they're go routines. ok
