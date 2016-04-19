@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
-	"html"
 	"io"
 	"io/ioutil"
 	"log"
@@ -11,21 +11,31 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/julienschmidt/httprouter"
 )
 
+//global business list
+var businessSlice []Business = make([]Business, 0, 10)
+
 type Business struct {
-	Id         uint32
-	Uuid       string
-	Name       string
-	Address    string
-	Address2   string
-	City       string
-	State      string
-	Zip        uint16
-	Country    string
-	Phone      uint32
-	Website    string
-	Created_at time.Time
+	Id         uint32    `json:"id"`
+	Uuid       string    `json:"uuid"`
+	Name       string    `json:"name"`
+	Address    string    `json:"address"`
+	Address2   string    `json:"address2"`
+	City       string    `json:"city"`
+	State      string    `json:"state"`
+	Zip        uint16    `json:"zip"`
+	Country    string    `json:"country"`
+	Phone      uint32    `json:"phone"`
+	Website    string    `json:"website"`
+	Created_at time.Time `json:"created_at"`
+}
+
+type BusinessListResponse struct {
+	BusinessList []Business `json:"businesses"`
+	//add pagination later
 }
 
 func main() {
@@ -36,7 +46,6 @@ func main() {
 	}
 	inString := string(dat)
 	businessList := csv.NewReader(strings.NewReader(inString))
-	businessSlice := make([]Business, 0, 10)
 
 	fmt.Println(businessList.Read())
 	for {
@@ -66,13 +75,19 @@ func main() {
 		business.Created_at = createdAt
 		businessSlice = append(businessSlice, *business)
 	}
-	fmt.Println(businessSlice[10])
+	fmt.Println(businessSlice[12])
 
 	//create request handling
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
-	})
+	router := httprouter.New()
+	router.GET("/businesses/", BusinessList)
+	//router.GET("/business/:id", Business)
 
-	//log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8080", router))
+}
+
+func BusinessList(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	response := BusinessListResponse{businessSlice}
+	json.NewEncoder(w).Encode(response)
+	//fmt.Println(businessSlice[0])
 }
