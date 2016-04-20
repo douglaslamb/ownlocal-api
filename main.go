@@ -18,26 +18,6 @@ import (
 //global business list
 var businessSlice []Business = make([]Business, 0, 10)
 
-type Business struct {
-	Id         uint32    `json:"id"`
-	Uuid       string    `json:"uuid"`
-	Name       string    `json:"name"`
-	Address    string    `json:"address"`
-	Address2   string    `json:"address2"`
-	City       string    `json:"city"`
-	State      string    `json:"state"`
-	Zip        uint16    `json:"zip"`
-	Country    string    `json:"country"`
-	Phone      uint32    `json:"phone"`
-	Website    string    `json:"website"`
-	Created_at time.Time `json:"created_at"`
-}
-
-type BusinessListResponse struct {
-	BusinessList []Business `json:"businesses"`
-	//add pagination later
-}
-
 func main() {
 	// read file
 	dat, err := ioutil.ReadFile("resources/engineering_project_businesses.csv")
@@ -47,7 +27,7 @@ func main() {
 	inString := string(dat)
 	businessList := csv.NewReader(strings.NewReader(inString))
 
-	fmt.Println(businessList.Read())
+	businessList.Read()
 	for {
 		record, err := businessList.Read()
 		if err == io.EOF {
@@ -75,19 +55,52 @@ func main() {
 		business.Created_at = createdAt
 		businessSlice = append(businessSlice, *business)
 	}
-	fmt.Println(businessSlice[12])
 
 	//create request handling
 
 	router := httprouter.New()
-	router.GET("/businesses/", BusinessList)
+	router.GET("/businesses", BusinessList)
 	//router.GET("/business/:id", Business)
 
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
 
-func BusinessList(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	response := BusinessListResponse{businessSlice}
-	json.NewEncoder(w).Encode(response)
-	//fmt.Println(businessSlice[0])
+func BusinessList(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	pageNumberStr := r.URL.Query().Get("page")
+	pageSizeStr := r.URL.Query().Get("perPage")
+	var pageNumber int
+	var pageSize int
+	if pageNumberStr == "" {
+		pageNumber = 1
+	} else {
+		var err error
+		pageNumber, err = strconv.Atoi(pageNumberStr)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	if pageSizeStr == "" {
+		pageSize = 50
+	} else {
+		var err error
+		pageSize, err = strconv.Atoi(pageSizeStr)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	fmt.Println(pageNumber, pageSize)
+	businessList := BusinessListResponse{
+		businessSlice[(pageNumber-1)*pageSize : pageNumber*pageSize],
+		Links{
+			//next in here I'm writing this stuff so that
+			// the next previous and next first and last
+			// pages are set up
+			"http://localhost:8080/businesses?page=1&perPage=50",
+			"http://localhost:8080/businesses?page=1&perPage=50",
+			"http://localhost:8080/businesses?page=1&perPage=50",
+			"http://localhost:8080/businesses?page=1&perPage=50",
+		},
+	}
+	json.NewEncoder(w).Encode(businessList)
 }
