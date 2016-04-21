@@ -78,7 +78,7 @@ func BusinessGet(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// out of range errors crash the server without error catching!
 	// and change that log fatal to something else,
 	// like send back a different json object
-	json.NewEncoder(w).Encode(business)
+	json.NewEncoder(w).Encode(response)
 }
 
 func BusinessList(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
