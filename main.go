@@ -68,17 +68,25 @@ func main() {
 func BusinessGet(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	businessId, err := strconv.Atoi(ps.ByName("id"))
 	if err != nil {
-		log.Fatal(err)
+		//log.Fatal(err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Business ID invalid"))
+	} else {
+		if businessId < 0 || businessId > len(businessSlice)-1 {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("Business ID out of range"))
+		} else {
+			fmt.Println(businessId)
+			response := businessSlice[businessId]
+			// get params and return the correct business object as long as its in range
+			// if it's not in range send back an error but I'll
+			// probably figure out the errors later
+			// out of range errors crash the server without error catching!
+			// and change that log fatal to something else,
+			// like send back a different json object
+			json.NewEncoder(w).Encode(response)
+		}
 	}
-	fmt.Println(businessId)
-	response := businessSlice[businessId]
-	// get params and return the correct business object as long as its in range
-	// if it's not in range send back an error but I'll
-	// probably figure out the errors later
-	// out of range errors crash the server without error catching!
-	// and change that log fatal to something else,
-	// like send back a different json object
-	json.NewEncoder(w).Encode(response)
 }
 
 func BusinessList(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -94,7 +102,9 @@ func BusinessList(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 		var err error
 		pageNumber, err = strconv.Atoi(pageNumberStr)
 		if err != nil {
-			log.Fatal(err)
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("Page number invalid"))
+			return
 		}
 	}
 	if pageSizeStr == "" {
@@ -103,14 +113,22 @@ func BusinessList(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 	} else {
 		var err error
 		pageSize, err = strconv.Atoi(pageSizeStr)
-		if err != nil {
-			log.Fatal(err)
+		if err != nil || pageSize < 1 || pageSize > len(businessSlice) {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("Page size invalid"))
+			return
 		}
 	}
 
 	totalPages := len(businessSlice) / pageSize
 	if len(businessSlice)%pageSize != 0 {
 		totalPages++
+	}
+
+	if pageNumber < 1 || pageNumber > totalPages {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Page number out of range"))
+		return
 	}
 
 	lastPageStr := strconv.Itoa(totalPages)
