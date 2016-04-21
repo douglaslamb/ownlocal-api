@@ -60,9 +60,25 @@ func main() {
 
 	router := httprouter.New()
 	router.GET("/businesses", BusinessList)
-	//router.GET("/business/:id", Business)
+	router.GET("/business/:id", BusinessGet)
 
 	log.Fatal(http.ListenAndServe(":8080", router))
+}
+
+func BusinessGet(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	businessId, err := strconv.Atoi(ps.ByName("id"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(businessId)
+	response := businessSlice[businessId]
+	// get params and return the correct business object as long as its in range
+	// if it's not in range send back an error but I'll
+	// probably figure out the errors later
+	// out of range errors crash the server without error catching!
+	// and change that log fatal to something else,
+	// like send back a different json object
+	json.NewEncoder(w).Encode(business)
 }
 
 func BusinessList(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -70,8 +86,10 @@ func BusinessList(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 	pageSizeStr := r.URL.Query().Get("perPage")
 	var pageNumber int
 	var pageSize int
+
 	if pageNumberStr == "" {
 		pageNumber = 1
+		pageNumberStr = "1"
 	} else {
 		var err error
 		pageNumber, err = strconv.Atoi(pageNumberStr)
@@ -81,6 +99,7 @@ func BusinessList(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 	}
 	if pageSizeStr == "" {
 		pageSize = 50
+		pageSizeStr = "50"
 	} else {
 		var err error
 		pageSize, err = strconv.Atoi(pageSizeStr)
@@ -89,17 +108,48 @@ func BusinessList(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 		}
 	}
 
+	totalPages := len(businessSlice) / pageSize
+	if len(businessSlice)%pageSize != 0 {
+		totalPages++
+	}
+
+	lastPageStr := strconv.Itoa(totalPages)
+
+	var nextPage int
+	var prevPage int
+
+	if pageNumber == totalPages {
+		nextPage = totalPages
+	} else {
+		nextPage = pageNumber + 1
+	}
+
+	if pageNumber == 1 {
+		prevPage = 1
+	} else {
+		prevPage = pageNumber - 1
+	}
+
+	nextPageStr := strconv.Itoa(nextPage)
+	prevPageStr := strconv.Itoa(prevPage)
+
+	firstString := "http://localhost:8080/businesses?page=1&perPage=" + pageSizeStr
+	prevString := "http://localhost:8080/businesses?page=" + prevPageStr + "&perPage=" + pageSizeStr
+	nextString := "http://localhost:8080/businesses?page=" + nextPageStr + "&perPage=" + pageSizeStr
+	lastString := "http://localhost:8080/businesses?page=" + lastPageStr + "&perPage=" + pageSizeStr
+
 	fmt.Println(pageNumber, pageSize)
+	lastBusiness := pageNumber * pageSize
+	if lastBusiness > len(businessSlice)-1 {
+		lastBusiness = len(businessSlice) - 1
+	}
 	businessList := BusinessListResponse{
-		businessSlice[(pageNumber-1)*pageSize : pageNumber*pageSize],
+		businessSlice[(pageNumber-1)*pageSize : lastBusiness],
 		Links{
-			//next in here I'm writing this stuff so that
-			// the next previous and next first and last
-			// pages are set up
-			"http://localhost:8080/businesses?page=1&perPage=50",
-			"http://localhost:8080/businesses?page=1&perPage=50",
-			"http://localhost:8080/businesses?page=1&perPage=50",
-			"http://localhost:8080/businesses?page=1&perPage=50",
+			firstString,
+			prevString,
+			nextString,
+			lastString,
 		},
 	}
 	json.NewEncoder(w).Encode(businessList)
