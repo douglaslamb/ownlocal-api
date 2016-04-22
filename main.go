@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/csv"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -37,8 +36,11 @@ func main() {
 			log.Fatal(err)
 		}
 		business := new(Business)
-		id, _ := strconv.Atoi(record[0])
-		business.Id = uint32(id)
+		id, err := strconv.Atoi(record[0])
+		if err != nil {
+			log.Fatal(err)
+		}
+		business.Id = int(id)
 		business.Uuid = record[1]
 		business.Name = record[2]
 		business.Address = record[3]
@@ -46,10 +48,16 @@ func main() {
 		business.City = record[5]
 		business.State = record[6]
 		zip, _ := strconv.Atoi(record[7])
-		business.Zip = uint16(zip)
+		if err != nil {
+			log.Fatal(err)
+		}
+		business.Zip = int(zip)
 		business.Country = record[8]
 		phone, _ := strconv.Atoi(record[9])
-		business.Phone = uint32(phone)
+		if err != nil {
+			log.Fatal(err)
+		}
+		business.Phone = int(phone)
 		business.Website = record[10]
 		createdAt, _ := time.Parse("2006-01-02 15:04:05", record[11])
 		business.Created_at = createdAt
@@ -76,14 +84,8 @@ func BusinessGet(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte("Business ID out of range"))
 		} else {
-			fmt.Println(businessId)
+			w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 			response := businessSlice[businessId]
-			// get params and return the correct business object as long as its in range
-			// if it's not in range send back an error but I'll
-			// probably figure out the errors later
-			// out of range errors crash the server without error catching!
-			// and change that log fatal to something else,
-			// like send back a different json object
 			json.NewEncoder(w).Encode(response)
 		}
 	}
@@ -156,13 +158,12 @@ func BusinessList(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 	nextString := "http://localhost:8080/businesses?page=" + nextPageStr + "&perPage=" + pageSizeStr
 	lastString := "http://localhost:8080/businesses?page=" + lastPageStr + "&perPage=" + pageSizeStr
 
-	fmt.Println(pageNumber, pageSize)
 	lastBusiness := pageNumber * pageSize
 	if lastBusiness > len(businessSlice)-1 {
 		lastBusiness = len(businessSlice) - 1
 	}
 	businessList := BusinessListResponse{
-		businessSlice[(pageNumber-1)*pageSize : lastBusiness],
+		businessSlice[(pageNumber-1)*pageSize : lastBusiness+1],
 		Links{
 			firstString,
 			prevString,
@@ -170,5 +171,6 @@ func BusinessList(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 			lastString,
 		},
 	}
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	json.NewEncoder(w).Encode(businessList)
 }

@@ -4,16 +4,16 @@ import "time"
 
 //global business list
 type Business struct {
-	Id         uint32    `json:"id"`
+	Id         int       `json:"id"`
 	Uuid       string    `json:"uuid"`
 	Name       string    `json:"name"`
 	Address    string    `json:"address"`
 	Address2   string    `json:"address2"`
 	City       string    `json:"city"`
 	State      string    `json:"state"`
-	Zip        uint16    `json:"zip"`
+	Zip        int       `json:"zip"`
 	Country    string    `json:"country"`
-	Phone      uint32    `json:"phone"`
+	Phone      int       `json:"phone"`
 	Website    string    `json:"website"`
 	Created_at time.Time `json:"created_at"`
 }
