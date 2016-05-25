@@ -8,7 +8,7 @@ Run `go run main.go structs.go` from the root of the repo. This is not necessary
 
 ## Install
 
-Run `go install` from the root of the repo. Execute the program by running `ownlocal-api` from anywhere within the system. Ensure that GOPATH/bin has been added to your PATH.
+Run `go install` from the root of the repo. Execute the program by running `ownlocal-api` from the root of the repo. Ensure that GOPATH/bin has been added to your PATH.
 
 ## Usage
 
