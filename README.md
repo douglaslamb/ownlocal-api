@@ -4,11 +4,11 @@ This is a REST API written in Go by Douglas Lamb. It responds to http GET reques
 
 ## Run
 
-Run `go run main.go structs.go` from the root of the repo. This is not necessary if you intend to install.
+Firstly install httprouter, a library for http request routing `go get github.com/julienschmidt/httprouter`. Then run `go run main.go structs.go` from the root of the repo. This is not necessary if you intend to install.
 
 ## Install
 
-Run `go install` from the root of the repo. Execute the program by running `ownlocal-api` from the root of the repo. Ensure that GOPATH/bin has been added to your PATH.
+Firstly install httprouter, a library for http request routing `go get github.com/julienschmidt/httprouter`. Run `go install` from the root of the repo. Execute the program by running `ownlocal-api` from the root of the repo. Ensure that GOPATH/bin has been added to your PATH.
 
 ## Usage
 
