@@ -18,7 +18,7 @@ As written it hosts the API at http://localhost:8080 . It responds to two types 
 
 Running http://localhost:8080/businesses from the server will return a JSON object containing an array of businesses and a "links" object. The businesses are paginated. The default page number is 1 and the default page size is 50. Hence http://localhost:8080/businesses will return the first 50 businesses.
 
-The client may specify the page and/or page size. For example, http://localhost:8080?page=20&perPage=60 . This request will return the 20th page with 60 businesses per page.
+The client may specify the page and/or page size. For example, http://localhost:8080/businesses?page=20&perPage=60 . This request will return the 20th page with 60 businesses per page.
 
 The "links" object contains four strings which correspond to the first, previous, next, and last pages respectively. The client may use these links to traverse the collection.
 
